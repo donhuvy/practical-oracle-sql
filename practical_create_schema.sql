@@ -11,6 +11,8 @@
    
    To be executed as a DBA user
 ** ***************************************************** */
+-- VyDN 2022_08_11
+-- ALTER SESSION SET "_ORACLE_SCRIPT" = true; 
 
 create user practical
    identified by practical
