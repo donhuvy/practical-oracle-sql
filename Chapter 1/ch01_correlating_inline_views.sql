@@ -24,102 +24,125 @@ set sqlformat ansiconsole
    Chapter 1 example code
    ----------------------------------------------------- */
 
--- Listing 1-1. The yearly sales of the 3 beers from Balthazar Brauerei
+-- Listing 1-1. The yearly sales of the 3 beers from Balthazar Brauerei.
+SELECT
+    bp.brewery_name,
+    bp.product_id AS p_id,
+    bp.product_name,
+    ys.yr,
+    ys.yr_qty
+FROM
+         brewery_products bp
+    JOIN yearly_sales ys ON ys.product_id = bp.product_id
+WHERE
+    bp.brewery_id = 518
+ORDER BY
+    bp.product_id,
+    ys.yr;
 
-select
-   bp.brewery_name
- , bp.product_id as p_id
- , bp.product_name
- , ys.yr
- , ys.yr_qty
-from brewery_products bp
-join yearly_sales ys
-   on ys.product_id = bp.product_id
-where bp.brewery_id = 518
-order by bp.product_id, ys.yr;
+-- Listing 1-2. Retrieving two columns from the best-selling year per beer.
+SELECT
+    bp.brewery_name,
+    bp.product_id AS p_id,
+    bp.product_name,
+    (
+        SELECT
+            ys.yr
+        FROM
+            yearly_sales ys
+        WHERE
+            ys.product_id = bp.product_id
+        ORDER BY
+            ys.yr_qty DESC
+        FETCH FIRST ROW ONLY
+    )             AS yr,
+    (
+        SELECT
+            ys.yr_qty
+        FROM
+            yearly_sales ys
+        WHERE
+            ys.product_id = bp.product_id
+        ORDER BY
+            ys.yr_qty DESC
+        FETCH FIRST ROW ONLY
+    )             AS yr_qty
+FROM
+    brewery_products bp
+WHERE
+    bp.brewery_id = 518
+ORDER BY
+    bp.product_id;
 
--- Listing 1-2. Retrieving two columns from the best-selling year per beer
+-- Listing 1-3. Using just a single scalar sub-query and value concatenation.
+SELECT
+    brewery_name,
+    product_id                      AS p_id,
+    product_name,
+    TO_NUMBER(substr(yr_qty_str,
+                     1,
+                     instr(yr_qty_str, ';') - 1)) AS yr,
+    TO_NUMBER(substr(yr_qty_str,
+                     instr(yr_qty_str, ';') + 1)) AS yr_qty
+FROM
+    (
+        SELECT
+            bp.brewery_name,
+            bp.product_id,
+            bp.product_name,
+            (
+                SELECT
+                    ys.yr
+                    || ';'
+                    || ys.yr_qty
+                FROM
+                    yearly_sales ys
+                WHERE
+                    ys.product_id = bp.product_id
+                ORDER BY
+                    ys.yr_qty DESC
+                FETCH FIRST ROW ONLY
+            ) AS yr_qty_str
+        FROM
+            brewery_products bp
+        WHERE
+            bp.brewery_id = 518
+    )
+ORDER BY
+    product_id;
 
-select
-   bp.brewery_name
- , bp.product_id as p_id
- , bp.product_name
- , (
-      select ys.yr
-      from yearly_sales ys
-      where ys.product_id = bp.product_id
-      order by ys.yr_qty desc
-      fetch first row only
-   ) as yr
- , (
-      select ys.yr_qty
-      from yearly_sales ys
-      where ys.product_id = bp.product_id
-      order by ys.yr_qty desc
-      fetch first row only
-   ) as yr_qty
-from brewery_products bp
-where bp.brewery_id = 518
-order by bp.product_id;
+-- Listing 1-4. Using analytic function to be able to retrieve all columns if desired.
+SELECT
+    brewery_name,
+    product_id AS p_id,
+    product_name,
+    yr,
+    yr_qty
+FROM
+    (
+        SELECT
+            bp.brewery_name,
+            bp.product_id,
+            bp.product_name,
+            ys.yr,
+            ys.yr_qty,
+            ROW_NUMBER()
+            OVER(PARTITION BY bp.product_id
+                 ORDER BY
+                     ys.yr_qty DESC
+            ) AS rn
+        FROM
+                 brewery_products bp
+            JOIN yearly_sales ys ON ys.product_id = bp.product_id
+        WHERE
+            bp.brewery_id = 518
+    )
+WHERE
+    rn = 1
+ORDER BY
+    product_id;
 
--- Listing 1-3. Using just a single scalar subquery and value concatenation
-
-select
-   brewery_name
- , product_id as p_id
- , product_name
- , to_number(
-      substr(yr_qty_str, 1, instr(yr_qty_str, ';') - 1)
-   ) as yr
- , to_number(
-      substr(yr_qty_str, instr(yr_qty_str, ';') + 1)
-   ) as yr_qty
-from (
-   select
-      bp.brewery_name
-    , bp.product_id
-    , bp.product_name
-    , (
-         select ys.yr || ';' || ys.yr_qty
-         from yearly_sales ys
-         where ys.product_id = bp.product_id
-         order by ys.yr_qty desc
-         fetch first row only
-      ) as yr_qty_str
-   from brewery_products bp
-   where bp.brewery_id = 518
-)
-order by product_id;
-
--- Listing 1-4. Using analytic function to be able to retrieve all columns if desired
-
-select
-   brewery_name
- , product_id as p_id
- , product_name
- , yr
- , yr_qty
-from (
-   select
-      bp.brewery_name
-    , bp.product_id
-    , bp.product_name
-    , ys.yr
-    , ys.yr_qty
-    , row_number() over (
-         partition by bp.product_id
-         order by ys.yr_qty desc
-      ) as rn
-   from brewery_products bp
-   join yearly_sales ys
-      on ys.product_id = bp.product_id
-   where bp.brewery_id = 518
-)
-where rn = 1
-order by product_id;
-
--- Listing 1-5. Achieving the same with a lateral inline view
-
+-- Listing 1-5. Achieving the same with a lateral in-line view.
 select
    bp.brewery_name
  , bp.product_id as p_id
