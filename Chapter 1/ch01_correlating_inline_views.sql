@@ -143,131 +143,158 @@ ORDER BY
     product_id;
 
 -- Listing 1-5. Achieving the same with a lateral in-line view.
-select
-   bp.brewery_name
- , bp.product_id as p_id
- , bp.product_name
- , top_ys.yr
- , top_ys.yr_qty
-from brewery_products bp
-cross join lateral(
-   select
-      ys.yr
-    , ys.yr_qty
-   from yearly_sales ys
-   where ys.product_id = bp.product_id
-   order by ys.yr_qty desc
-   fetch first row only
-) top_ys
-where bp.brewery_id = 518
-order by bp.product_id;
+SELECT
+    bp.brewery_name,
+    bp.product_id AS p_id,
+    bp.product_name,
+    top_ys.yr,
+    top_ys.yr_qty
+FROM
+         brewery_products bp
+    CROSS JOIN LATERAL (
+        SELECT
+            ys.yr,
+            ys.yr_qty
+        FROM
+            yearly_sales ys
+        WHERE
+            ys.product_id = bp.product_id
+        ORDER BY
+            ys.yr_qty DESC
+        FETCH FIRST ROW ONLY
+    ) top_ys
+WHERE
+    bp.brewery_id = 518
+ORDER BY
+    bp.product_id;
 
--- Traditional style from clause without ANSI style cross join
+-- Traditional style from clause without ANSI style cross-join.
+SELECT
+    bp.brewery_name,
+    bp.product_id AS p_id,
+    bp.product_name,
+    top_ys.yr,
+    top_ys.yr_qty
+FROM
+    brewery_products bp,
+    LATERAL (
+        SELECT
+            ys.yr,
+            ys.yr_qty
+        FROM
+            yearly_sales ys
+        WHERE
+            ys.product_id = bp.product_id
+        ORDER BY
+            ys.yr_qty DESC
+        FETCH FIRST ROW ONLY
+    )                top_ys
+WHERE
+    bp.brewery_id = 518
+ORDER BY
+    bp.product_id;
 
-select
-   bp.brewery_name
- , bp.product_id as p_id
- , bp.product_name
- , top_ys.yr
- , top_ys.yr_qty
-from brewery_products bp
-, lateral(
-   select
-      ys.yr
-    , ys.yr_qty
-   from yearly_sales ys
-   where ys.product_id = bp.product_id
-   order by ys.yr_qty desc
-   fetch first row only
-) top_ys
-where bp.brewery_id = 518
-order by bp.product_id;
+-- Combining both lateral and join predicates in the on clause.
+SELECT
+    bp.brewery_name,
+    bp.product_id AS p_id,
+    bp.product_name,
+    top_ys.yr,
+    top_ys.yr_qty
+FROM
+         brewery_products bp
+    JOIN LATERAL (
+        SELECT
+            ys.yr,
+            ys.yr_qty
+        FROM
+            yearly_sales ys
+        WHERE
+            ys.product_id = bp.product_id
+        ORDER BY
+            ys.yr_qty DESC
+        FETCH FIRST ROW ONLY
+    ) top_ys ON 1 = 1
+WHERE
+    bp.brewery_id = 518
+ORDER BY
+    bp.product_id;
 
--- Combining both lateral and join predicates in the on clause
+-- Listing 1-6. The alternative syntax cross apply.
+SELECT
+    bp.brewery_name,
+    bp.product_id AS p_id,
+    bp.product_name,
+    top_ys.yr,
+    top_ys.yr_qty
+FROM
+    brewery_products bp
+    CROSS APPLY (
+        SELECT
+            ys.yr,
+            ys.yr_qty
+        FROM
+            yearly_sales ys
+        WHERE
+            ys.product_id = bp.product_id
+        ORDER BY
+            ys.yr_qty DESC
+        FETCH FIRST ROW ONLY
+    )                top_ys
+WHERE
+    bp.brewery_id = 518
+ORDER BY
+    bp.product_id;
 
-select
-   bp.brewery_name
- , bp.product_id as p_id
- , bp.product_name
- , top_ys.yr
- , top_ys.yr_qty
-from brewery_products bp
-join lateral(
-   select
-      ys.yr
-    , ys.yr_qty
-   from yearly_sales ys
-   where ys.product_id = bp.product_id
-   order by ys.yr_qty desc
-   fetch first row only
-) top_ys
-   on 1=1
-where bp.brewery_id = 518
-order by bp.product_id;
+-- Listing 1-7. Using outer apply when you need outer join functionality.
+SELECT
+    bp.brewery_name,
+    bp.product_id AS p_id,
+    bp.product_name,
+    top_ys.yr,
+    top_ys.yr_qty
+FROM
+    brewery_products bp
+    OUTER APPLY (
+        SELECT
+            ys.yr,
+            ys.yr_qty
+        FROM
+            yearly_sales ys
+        WHERE
+                ys.product_id = bp.product_id
+            AND ys.yr_qty < 400
+        ORDER BY
+            ys.yr_qty DESC
+        FETCH FIRST ROW ONLY
+    )                top_ys
+WHERE
+    bp.brewery_id = 518
+ORDER BY
+    bp.product_id;
 
--- Listing 1-6. The alternative syntax cross apply
-
-select
-   bp.brewery_name
- , bp.product_id as p_id
- , bp.product_name
- , top_ys.yr
- , top_ys.yr_qty
-from brewery_products bp
-cross apply(
-   select
-      ys.yr
-    , ys.yr_qty
-   from yearly_sales ys
-   where ys.product_id = bp.product_id
-   order by ys.yr_qty desc
-   fetch first row only
-) top_ys
-where bp.brewery_id = 518
-order by bp.product_id;
-
--- Listing 1-7. Using outer apply when you need outer join functionality
-
-select
-   bp.brewery_name
- , bp.product_id as p_id
- , bp.product_name
- , top_ys.yr
- , top_ys.yr_qty
-from brewery_products bp
-outer apply(
-   select
-      ys.yr
-    , ys.yr_qty
-   from yearly_sales ys
-   where ys.product_id = bp.product_id
-   and ys.yr_qty < 400
-   order by ys.yr_qty desc
-   fetch first row only
-) top_ys
-where bp.brewery_id = 518
-order by bp.product_id;
-
--- Listing 1-8. Outer join with the lateral keyword
-
-select
-   bp.brewery_name
- , bp.product_id as p_id
- , bp.product_name
- , top_ys.yr
- , top_ys.yr_qty
-from brewery_products bp
-left outer join lateral(
-   select
-      ys.yr
-    , ys.yr_qty
-   from yearly_sales ys
-   where ys.product_id = bp.product_id
-   order by ys.yr_qty desc
-   fetch first row only
-) top_ys
-   on top_ys.yr_qty < 500
-where bp.brewery_id = 518
-order by bp.product_id;
-
-/* ***************************************************** */
+-- Listing 1-8. Outer join with the lateral keyword.
+SELECT
+    bp.brewery_name,
+    bp.product_id AS p_id,
+    bp.product_name,
+    top_ys.yr,
+    top_ys.yr_qty
+FROM
+    brewery_products bp
+    LEFT OUTER JOIN LATERAL (
+        SELECT
+            ys.yr,
+            ys.yr_qty
+        FROM
+            yearly_sales ys
+        WHERE
+            ys.product_id = bp.product_id
+        ORDER BY
+            ys.yr_qty DESC
+        FETCH FIRST ROW ONLY
+    )                top_ys ON top_ys.yr_qty < 500
+WHERE
+    bp.brewery_id = 518
+ORDER BY
+    bp.product_id;

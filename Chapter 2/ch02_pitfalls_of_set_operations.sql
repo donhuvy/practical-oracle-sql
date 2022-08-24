@@ -42,77 +42,119 @@ column rn            format 9
    Chapter 2 example code
    ----------------------------------------------------- */
 
--- Listing 2-2. Data for two customers and their orders
+-- Listing 2-2. Data for two customers and their orders.
+SELECT
+    customer_id AS c_id,
+    customer_name,
+    ordered,
+    product_id  AS p_id,
+    product_name,
+    qty
+FROM
+    customer_order_products
+WHERE
+    customer_id IN ( 50042, 50741 )
+ORDER BY
+    customer_id,
+    product_id;
 
-select
-   customer_id as c_id, customer_name, ordered
- , product_id  as p_id, product_name , qty
-from customer_order_products
-where customer_id in (50042, 50741)
-order by customer_id, product_id;
-
--- Listing 2-3. Data for two breweries and the products bought from them
-
-select
-   brewery_id as b_id, brewery_name
- , product_id as p_id, product_name
-from brewery_products
-where brewery_id in (518, 523)
-order by brewery_id, product_id;
+-- Listing 2-3. Data for two breweries and the products bought from them.
+SELECT
+    brewery_id AS b_id,
+    brewery_name,
+    product_id AS p_id,
+    product_name
+FROM
+    brewery_products
+WHERE
+    brewery_id IN ( 518, 523 )
+ORDER BY
+    brewery_id,
+    product_id;
 
 -- Listing 2-4. Concatenating the results of two queries
+SELECT
+    product_id AS p_id,
+    product_name
+FROM
+    customer_order_products
+WHERE
+    customer_id = 50741
+UNION ALL
+SELECT
+    product_id AS p_id,
+    product_name
+FROM
+    brewery_products
+WHERE
+    brewery_id = 523;
 
-select product_id as p_id, product_name
-from customer_order_products
-where customer_id = 50741
-union all
-select product_id as p_id, product_name
-from brewery_products
-where brewery_id = 523;
+-- Listing 2-5. Different columns from the two queries.
+SELECT
+    customer_id   AS c_or_b_id,
+    customer_name AS c_or_b_name,
+    product_id    AS p_id,
+    product_name
+FROM
+    customer_order_products
+WHERE
+    customer_id = 50741
+UNION ALL
+SELECT
+    brewery_id,
+    brewery_name,
+    product_id AS p_id,
+    product_name
+FROM
+    brewery_products
+WHERE
+    brewery_id = 523;
 
--- Listing 2-5. Different columns from the two queries
-
-select
-   customer_id as c_or_b_id, customer_name as c_or_b_name
- , product_id as p_id, product_name
-from customer_order_products
-where customer_id = 50741
-union all
-select
-   brewery_id, brewery_name
- , product_id as p_id, product_name
-from brewery_products
-where brewery_id = 523;
-
--- Attempting to order by a table column leads to ORA-00904: "PRODUCT_ID": invalid identifier
-
-select
-   customer_id as c_or_b_id, customer_name as c_or_b_name
- , product_id as p_id, product_name
-from customer_order_products
-where customer_id = 50741
-union all
-select
-   brewery_id, brewery_name
- , product_id as p_id, product_name
-from brewery_products
-where brewery_id = 523
-order by product_id;
+-- Attempting to order by a table column leads to ORA-00904: "PRODUCT_ID": invalid identifier.
+SELECT
+    customer_id   AS c_or_b_id,
+    customer_name AS c_or_b_name,
+    product_id    AS p_id,
+    product_name
+FROM
+    customer_order_products
+WHERE
+    customer_id = 50741
+UNION ALL
+SELECT
+    brewery_id,
+    brewery_name,
+    product_id AS p_id,
+    product_name
+FROM
+    brewery_products
+WHERE
+    brewery_id = 523
+ORDER BY
+    product_id;
 
 -- Ordering by column alias works
-
-select
-   customer_id as c_or_b_id, customer_name as c_or_b_name
- , product_id as p_id, product_name
-from customer_order_products
-where customer_id = 50741
-union all
-select
-   brewery_id, brewery_name
- , product_id as p_id, product_name
-from brewery_products
-where brewery_id = 523
-order by p_id;
+SELECT
+    customer_id   AS c_or_b_id,
+    customer_name AS c_or_b_name,
+    product_id    AS p_id,
+    product_name
+FROM
+    customer_order_products
+WHERE
+    customer_id = 50741
+UNION ALL
+SELECT
+    brewery_id,
+    brewery_name,
+    product_id AS p_id,
+    product_name
+FROM
+    brewery_products
+WHERE
+    brewery_id = 523
+ORDER BY
+    p_id;
 
 -- Listing 2-6. Union is a true set operation that implicitly performs a distinct of the query result
 
