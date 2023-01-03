@@ -1,337 +1,429 @@
-/* ***************************************************** **
-   practical_fill_schema.sql
-   
-   Companion script for Practical Oracle SQL, Apress 2020
-   by Kim Berg Hansen, https://www.kibeha.dk
-   Use at your own risk
-   *****************************************************
-   
-   Creation of objects in schema PRACTICAL
-   Tables, data and other objects
-   
-   To be executed in schema PRACTICAL
-** ***************************************************** */
-
-/* -----------------------------------------------------
-   Create tables
-   ----------------------------------------------------- */
-
-create table customers (
-   id          integer constraint customer_pk primary key
- , name        varchar2(20 char) not null
+CREATE TABLE customers (
+    id   INTEGER
+        CONSTRAINT customer_pk PRIMARY KEY,
+    name VARCHAR2(20 CHAR) NOT NULL
 );
 
-create table conway_gen_zero (
-   x           integer not null
- , y           integer not null
- , alive       integer not null check (alive in (0,1))
- , constraint conway_gen_zero_pk primary key (x, y)
+CREATE TABLE conway_gen_zero (
+    x     INTEGER NOT NULL,
+    y     INTEGER NOT NULL,
+    alive INTEGER NOT NULL CHECK ( alive IN ( 0, 1 ) ),
+    CONSTRAINT conway_gen_zero_pk PRIMARY KEY ( x,
+                                                y )
 );
 
-create table web_devices (
-   day         date constraint web_devices_pk primary key
- , pc          integer
- , tablet      integer
- , phone       integer
+CREATE TABLE web_devices (
+    day    DATE
+        CONSTRAINT web_devices_pk PRIMARY KEY,
+    pc     INTEGER,
+    tablet INTEGER,
+    phone  INTEGER
 );
 
-create table web_demographics (
-   day         date constraint web_demographics_pk primary key
- , m_tw_cnt    integer
- , m_tw_qty    integer
- , m_fb_cnt    integer
- , m_fb_qty    integer
- , f_tw_cnt    integer
- , f_tw_qty    integer
- , f_fb_cnt    integer
- , f_fb_qty    integer
+CREATE TABLE web_demographics (
+    day      DATE
+        CONSTRAINT web_demographics_pk PRIMARY KEY,
+    m_tw_cnt INTEGER,
+    m_tw_qty INTEGER,
+    m_fb_cnt INTEGER,
+    m_fb_qty INTEGER,
+    f_tw_cnt INTEGER,
+    f_tw_qty INTEGER,
+    f_fb_cnt INTEGER,
+    f_fb_qty INTEGER
 );
 
-create table channels_dim (
-   id          integer constraint channels_dim_pk primary key
- , name        varchar2(20 char) not null
- , shortcut    varchar2(2  char) not null
+CREATE TABLE channels_dim (
+    id       INTEGER
+        CONSTRAINT channels_dim_pk PRIMARY KEY,
+    name     VARCHAR2(20 CHAR) NOT NULL,
+    shortcut VARCHAR2(2 CHAR) NOT NULL
 );
 
-create table gender_dim (
-   letter      char(1 char) constraint gender_dim_pk primary key
- , name        varchar2(10 char)
+CREATE TABLE gender_dim (
+    letter CHAR(1 CHAR)
+        CONSTRAINT gender_dim_pk PRIMARY KEY,
+    name   VARCHAR2(10 CHAR)
 );
 
-create table packaging (
-   id          integer constraint packaging_pk primary key
- , name        varchar2(20 char) not null
+CREATE TABLE packaging (
+    id   INTEGER
+        CONSTRAINT packaging_pk PRIMARY KEY,
+    name VARCHAR2(20 CHAR) NOT NULL
 );
 
-create table packaging_relations (
-   packaging_id   not null constraint packing_relations_parent_fk
-                              references packaging
- , contains_id    not null constraint packing_relations_child_fk
-                              references packaging
- , qty            integer not null
- , constraint packaging_relations_pk primary key (packaging_id, contains_id)
+CREATE TABLE packaging_relations (
+    packaging_id NOT NULL
+        CONSTRAINT packing_relations_parent_fk
+            REFERENCES packaging,
+    contains_id NOT NULL
+        CONSTRAINT packing_relations_child_fk
+            REFERENCES packaging,
+    qty INTEGER NOT NULL,
+    CONSTRAINT packaging_relations_pk PRIMARY KEY ( packaging_id,
+                                                    contains_id )
 );
 
-create index packing_relations_child_fk_ix on packaging_relations (contains_id);
+CREATE INDEX packing_relations_child_fk_ix ON
+    packaging_relations (
+        contains_id
+    );
 
-create table product_groups (
-   id          integer constraint product_groups_pk primary key
- , name        varchar2(20 char) not null
+CREATE TABLE product_groups (
+    id   INTEGER
+        CONSTRAINT product_groups_pk PRIMARY KEY,
+    name VARCHAR2(20 CHAR) NOT NULL
 );
 
-create table products (
-   id          integer constraint products_pk primary key
- , name        varchar2(20 char) not null
- , group_id    not null constraint products_product_groups_fk
-                           references product_groups
+CREATE TABLE products (
+    id   INTEGER
+        CONSTRAINT products_pk PRIMARY KEY,
+    name VARCHAR2(20 CHAR) NOT NULL,
+    group_id NOT NULL
+        CONSTRAINT products_product_groups_fk
+            REFERENCES product_groups
 );
 
-create index products_product_groups_fk_ix on products (group_id);
+CREATE INDEX products_product_groups_fk_ix ON
+    products (
+        group_id
+    );
 
-create table monthly_sales (
-   product_id  not null constraint monthly_sales_product_fk
-                           references products
- , mth         date     not null
- , qty         number   not null
- , constraint monthly_sales_pk primary key (product_id, mth)
- , constraint monthly_sales_mth_valid check (
-      mth = trunc(mth, 'MM')
-   )
+CREATE TABLE monthly_sales (
+    product_id NOT NULL
+        CONSTRAINT monthly_sales_product_fk
+            REFERENCES products,
+    mth DATE NOT NULL,
+    qty NUMBER NOT NULL,
+    CONSTRAINT monthly_sales_pk PRIMARY KEY ( product_id,
+                                              mth ),
+    CONSTRAINT monthly_sales_mth_valid CHECK ( mth = trunc(mth, 'MM') )
 );
 
-create table breweries (
-   id          integer constraint brewery_pk primary key
- , name        varchar2(20 char) not null
+CREATE TABLE breweries (
+    id   INTEGER
+        CONSTRAINT brewery_pk PRIMARY KEY,
+    name VARCHAR2(20 CHAR) NOT NULL
 );
 
-create table purchases (
-   id          integer constraint purchases_pk primary key
- , purchased   date     not null
- , brewery_id  not null constraint purchases_brewery_fk
-                           references breweries
- , product_id  not null constraint purchases_product_fk
-                           references products
- , qty         number   not null
- , cost        number   not null
+CREATE TABLE purchases (
+    id        INTEGER
+        CONSTRAINT purchases_pk PRIMARY KEY,
+    purchased DATE NOT NULL,
+    brewery_id NOT NULL
+        CONSTRAINT purchases_brewery_fk
+            REFERENCES breweries,
+    product_id NOT NULL
+        CONSTRAINT purchases_product_fk
+            REFERENCES products,
+    qty       NUMBER NOT NULL,
+    cost      NUMBER NOT NULL
 );
 
-create index purchases_brewery_fk_ix on purchases (brewery_id);
+CREATE INDEX purchases_brewery_fk_ix ON
+    purchases (
+        brewery_id
+    );
 
-create index purchases_product_fk_ix on purchases (product_id);
+CREATE INDEX purchases_product_fk_ix ON
+    purchases (
+        product_id
+    );
 
-create table product_alcohol (
-   product_id     not null constraint product_alcohol_pk primary key
-                           constraint product_alcohol_product_fk
-                              references products
- , sales_volume   number   not null
- , abv            number   not null
+CREATE TABLE product_alcohol (
+    product_id NOT NULL
+        CONSTRAINT product_alcohol_pk PRIMARY KEY
+        CONSTRAINT product_alcohol_product_fk
+            REFERENCES products,
+    sales_volume NUMBER NOT NULL,
+    abv          NUMBER NOT NULL
 );
 
-create table customer_favorites (
-   customer_id    not null constraint customer_favorites_customer_fk
-                              references customers
- , favorite_list  varchar2(4000 char)
- , constraint customer_favorites_pk primary key (customer_id)
+CREATE TABLE customer_favorites (
+    customer_id NOT NULL
+        CONSTRAINT customer_favorites_customer_fk
+            REFERENCES customers,
+    favorite_list VARCHAR2(4000 CHAR),
+    CONSTRAINT customer_favorites_pk PRIMARY KEY ( customer_id )
 );
 
-create table customer_reviews (
-   customer_id    not null constraint customer_reviews_customer_fk
-                              references customers
- , review_list    varchar2(4000 char)
- , constraint customer_reviews_pk primary key (customer_id)
+CREATE TABLE customer_reviews (
+    customer_id NOT NULL
+        CONSTRAINT customer_reviews_customer_fk
+            REFERENCES customers,
+    review_list VARCHAR2(4000 CHAR),
+    CONSTRAINT customer_reviews_pk PRIMARY KEY ( customer_id )
 );
 
-create table locations (
-   id          integer constraint location_pk primary key
- , warehouse   integer     not null
- , aisle       varchar2(1) not null
- , position    integer     not null
- , constraint locations_uq unique (warehouse, aisle, position)
+CREATE TABLE locations (
+    id        INTEGER
+        CONSTRAINT location_pk PRIMARY KEY,
+    warehouse INTEGER NOT NULL,
+    aisle     VARCHAR2(1) NOT NULL,
+    position  INTEGER NOT NULL,
+    CONSTRAINT locations_uq UNIQUE ( warehouse,
+                                     aisle,
+                                     position )
 );
 
-create table inventory (
-   id          integer  constraint inventory_pk primary key
- , location_id not null constraint inventory_location_fk
-                           references locations
- , product_id  not null constraint inventory_product_fk
-                           references products
- , purchase_id not null constraint inventory_purchase_fk
-                           references purchases
- , qty         number   not null
+CREATE TABLE inventory (
+    id  INTEGER
+        CONSTRAINT inventory_pk PRIMARY KEY,
+    location_id NOT NULL
+        CONSTRAINT inventory_location_fk
+            REFERENCES locations,
+    product_id NOT NULL
+        CONSTRAINT inventory_product_fk
+            REFERENCES products,
+    purchase_id NOT NULL
+        CONSTRAINT inventory_purchase_fk
+            REFERENCES purchases,
+    qty NUMBER NOT NULL
 );
 
-create index inventory_location_fk_ix on inventory (location_id);
+CREATE INDEX inventory_location_fk_ix ON
+    inventory (
+        location_id
+    );
 
-create index inventory_product_fk_ix on inventory (product_id);
+CREATE INDEX inventory_product_fk_ix ON
+    inventory (
+        product_id
+    );
 
-create index inventory_purchase_fk_ix on inventory (purchase_id);
+CREATE INDEX inventory_purchase_fk_ix ON
+    inventory (
+        purchase_id
+    );
 
-create table orders (
-   id          integer  constraint order_pk primary key
- , customer_id not null constraint order_customer_fk
-                           references customers
- , ordered     date
- , delivery    date
+CREATE TABLE orders (
+    id       INTEGER
+        CONSTRAINT order_pk PRIMARY KEY,
+    customer_id NOT NULL
+        CONSTRAINT order_customer_fk
+            REFERENCES customers,
+    ordered  DATE,
+    delivery DATE
 );
 
-create index order_customer_fk_ix on orders (customer_id);
+CREATE INDEX order_customer_fk_ix ON
+    orders (
+        customer_id
+    );
 
-create table orderlines (
-   id          integer  constraint orderline_pk primary key
- , order_id    not null constraint orderline_order_fk
-                           references orders
- , product_id  not null constraint orderline_product_fk
-                           references products
- , qty         number   not null
- , amount      number   not null
+CREATE TABLE orderlines (
+    id     INTEGER
+        CONSTRAINT orderline_pk PRIMARY KEY,
+    order_id NOT NULL
+        CONSTRAINT orderline_order_fk
+            REFERENCES orders,
+    product_id NOT NULL
+        CONSTRAINT orderline_product_fk
+            REFERENCES products,
+    qty    NUMBER NOT NULL,
+    amount NUMBER NOT NULL
 );
 
-create index orderline_order_fk_ix on orderlines (order_id);
+CREATE INDEX orderline_order_fk_ix ON
+    orderlines (
+        order_id
+    );
 
-create table monthly_budget (
-   product_id  not null constraint monthly_budget_product_fk
-                           references products
- , mth         date     not null
- , qty         number   not null
- , constraint monthly_budget_pk primary key (product_id, mth)
- , constraint monthly_budget_mth_valid check (
-      mth = trunc(mth, 'MM')
-   )
+CREATE TABLE monthly_budget (
+    product_id NOT NULL
+        CONSTRAINT monthly_budget_product_fk
+            REFERENCES products,
+    mth DATE NOT NULL,
+    qty NUMBER NOT NULL,
+    CONSTRAINT monthly_budget_pk PRIMARY KEY ( product_id,
+                                               mth ),
+    CONSTRAINT monthly_budget_mth_valid CHECK ( mth = trunc(mth, 'MM') )
 );
 
-create table product_minimums (
-   product_id     not null constraint product_minimums_pk primary key
-                           constraint product_minimums_product_fk
-                              references products
- , qty_minimum    number   not null
- , qty_purchase   number   not null
+CREATE TABLE product_minimums (
+    product_id NOT NULL
+        CONSTRAINT product_minimums_pk PRIMARY KEY
+        CONSTRAINT product_minimums_product_fk
+            REFERENCES products,
+    qty_minimum  NUMBER NOT NULL,
+    qty_purchase NUMBER NOT NULL
 );
 
-create table stock (
-   symbol   varchar2(10) constraint stock_pk primary key
- , company  varchar2(40) not null
+CREATE TABLE stock (
+    symbol  VARCHAR2(10)
+        CONSTRAINT stock_pk PRIMARY KEY,
+    company VARCHAR2(40) NOT NULL
 );
 
-create table ticker (
-   symbol   constraint ticker_symbol_fk references stock
- , day      date   not null
- , price    number not null
- , constraint ticker_pk primary key (symbol, day)
+CREATE TABLE ticker (
+    symbol
+        CONSTRAINT ticker_symbol_fk
+            REFERENCES stock,
+    day   DATE NOT NULL,
+    price NUMBER NOT NULL,
+    CONSTRAINT ticker_pk PRIMARY KEY ( symbol,
+                                       day )
 );
 
-create table web_apps (
-   id             integer constraint web_apps_pk primary key
- , name           varchar2(20 char) not null
+CREATE TABLE web_apps (
+    id   INTEGER
+        CONSTRAINT web_apps_pk PRIMARY KEY,
+    name VARCHAR2(20 CHAR) NOT NULL
 );
 
-create table web_pages (
-   app_id         not null constraint web_pages_app_fk
-                     references web_apps
- , page_no        integer not null
- , friendly_url   varchar2(20 char) not null
- , constraint web_pages_pk primary key (app_id, page_no)
+CREATE TABLE web_pages (
+    app_id NOT NULL
+        CONSTRAINT web_pages_app_fk
+            REFERENCES web_apps,
+    page_no      INTEGER NOT NULL,
+    friendly_url VARCHAR2(20 CHAR) NOT NULL,
+    CONSTRAINT web_pages_pk PRIMARY KEY ( app_id,
+                                          page_no )
 );
 
-create table web_counter_hist (
-   app_id      integer not null
- , page_no     integer not null
- , day         date    not null
- , counter     integer not null
- , constraint web_counter_hist_pk primary key (app_id, page_no, day)
- , constraint web_counter_hist_page_fk foreign key (app_id, page_no)
-      references web_pages (app_id, page_no)
+CREATE TABLE web_counter_hist (
+    app_id  INTEGER NOT NULL,
+    page_no INTEGER NOT NULL,
+    day     DATE NOT NULL,
+    counter INTEGER NOT NULL,
+    CONSTRAINT web_counter_hist_pk PRIMARY KEY ( app_id,
+                                                 page_no,
+                                                 day ),
+    CONSTRAINT web_counter_hist_page_fk FOREIGN KEY ( app_id,
+                                                      page_no )
+        REFERENCES web_pages ( app_id,
+                               page_no )
 );
 
-create table server_heartbeat (
-   server      varchar2(15 char) not null
- , beat_time   date              not null
- , constraint server_heartbeat_uq unique (
-      server, beat_time
-   )
+CREATE TABLE server_heartbeat (
+    server    VARCHAR2(15 CHAR) NOT NULL,
+    beat_time DATE NOT NULL,
+    CONSTRAINT server_heartbeat_uq UNIQUE ( server,
+                                            beat_time )
 );
 
-create table web_page_visits (
-   client_ip   varchar2(15 char) not null
- , visit_time  date              not null
- , app_id      integer           not null
- , page_no     integer           not null
- , constraint web_page_visits_page_fk foreign key (app_id, page_no)
-      references web_pages (app_id, page_no)
+CREATE TABLE web_page_visits (
+    client_ip  VARCHAR2(15 CHAR) NOT NULL,
+    visit_time DATE NOT NULL,
+    app_id     INTEGER NOT NULL,
+    page_no    INTEGER NOT NULL,
+    CONSTRAINT web_page_visits_page_fk FOREIGN KEY ( app_id,
+                                                     page_no )
+        REFERENCES web_pages ( app_id,
+                               page_no )
 );
 
-create index web_page_visits_page_fk_ix on web_page_visits (app_id, page_no);
+CREATE INDEX web_page_visits_page_fk_ix ON
+    web_page_visits (
+        app_id,
+        page_no
+    );
 
-create table employees (
-   id             integer constraint employees_pk primary key
- , name           varchar2(20 char) not null
- , title          varchar2(20 char) not null
- , supervisor_id  constraint employees_supervisor_fk
-                     references employees
+CREATE TABLE employees (
+    id    INTEGER
+        CONSTRAINT employees_pk PRIMARY KEY,
+    name  VARCHAR2(20 CHAR) NOT NULL,
+    title VARCHAR2(20 CHAR) NOT NULL,
+    supervisor_id
+        CONSTRAINT employees_supervisor_fk
+            REFERENCES employees
 );
 
-create index employees_supervisor_fk_ix on employees (supervisor_id);
+CREATE INDEX employees_supervisor_fk_ix ON
+    employees (
+        supervisor_id
+    );
 
-create table emp_hire_periods (
-   emp_id         not null constraint emp_hire_periods_emp_fk
-                     references employees
- , start_date     date not null
- , end_date       date
- , title          varchar2(20 char) not null
- , constraint emp_hire_periods_pk primary key (emp_id, start_date)
- , period for employed_in (start_date, end_date)
+CREATE TABLE emp_hire_periods (
+    emp_id NOT NULL
+        CONSTRAINT emp_hire_periods_emp_fk
+            REFERENCES employees,
+    start_date DATE NOT NULL,
+    end_date   DATE,
+    title      VARCHAR2(20 CHAR) NOT NULL,
+    CONSTRAINT emp_hire_periods_pk PRIMARY KEY ( emp_id,
+                                                 start_date ),
+    PERIOD FOR employed_in ( start_date, end_date )
 );
 
-create table picking_list (
-   id             integer constraint picking_list_pk primary key
- , created        date not null
- , picker_emp_id  constraint picking_list_emp_fk
-                     references employees
+CREATE TABLE picking_list (
+    id      INTEGER
+        CONSTRAINT picking_list_pk PRIMARY KEY,
+    created DATE NOT NULL,
+    picker_emp_id
+        CONSTRAINT picking_list_emp_fk
+            REFERENCES employees
 );
 
-create index picking_list_emp_fk_ix on picking_list (picker_emp_id);
+CREATE INDEX picking_list_emp_fk_ix ON
+    picking_list (
+        picker_emp_id
+    );
 
-create table picking_line (
-   picklist_id    not null constraint picking_line_picking_list_fk
-                     references picking_list
- , line_no        integer not null
- , location_id    not null constraint picking_line_location_fk
-                     references locations
- , order_id       not null constraint picking_line_order_fk
-                     references orders
- , product_id     not null constraint picking_line_product_fk
-                     references products
- , qty            number not null
- , constraint     picking_line_pk primary key (picklist_id, line_no)
+CREATE TABLE picking_line (
+    picklist_id NOT NULL
+        CONSTRAINT picking_line_picking_list_fk
+            REFERENCES picking_list,
+    line_no INTEGER NOT NULL,
+    location_id NOT NULL
+        CONSTRAINT picking_line_location_fk
+            REFERENCES locations,
+    order_id NOT NULL
+        CONSTRAINT picking_line_order_fk
+            REFERENCES orders,
+    product_id NOT NULL
+        CONSTRAINT picking_line_product_fk
+            REFERENCES products,
+    qty     NUMBER NOT NULL,
+    CONSTRAINT picking_line_pk PRIMARY KEY ( picklist_id,
+                                             line_no )
 );
 
-create index picking_line_location_fk_ix on picking_line (location_id);
+CREATE INDEX picking_line_location_fk_ix ON
+    picking_line (
+        location_id
+    );
 
-create index picking_line_order_fk_ix on picking_line (order_id);
+CREATE INDEX picking_line_order_fk_ix ON
+    picking_line (
+        order_id
+    );
 
-create index picking_line_product_fk_ix on picking_line (product_id);
+CREATE INDEX picking_line_product_fk_ix ON
+    picking_line (
+        product_id
+    );
 
-create table picking_log (
-   picklist_id    not null constraint picking_log_picking_list_fk
-                     references picking_list
- , log_time       date not null
- , activity       varchar2(1 char) not null
-                     check (activity in ('A', 'P', 'D'))
- , location_id    constraint picking_log_location_fk
-                     references locations
- , pickline_no    integer
- , constraint picking_log_picking_line_fk foreign key (picklist_id, pickline_no)
-      references picking_line (picklist_id, line_no)
- , constraint picking_log_picking_line_ck
-      check (not (activity = 'P' and pickline_no is null))
+CREATE TABLE picking_log (
+    picklist_id NOT NULL
+        CONSTRAINT picking_log_picking_list_fk
+            REFERENCES picking_list,
+    log_time    DATE NOT NULL,
+    activity    VARCHAR2(1 CHAR) NOT NULL CHECK ( activity IN ( 'A', 'P', 'D' ) ),
+    location_id
+        CONSTRAINT picking_log_location_fk
+            REFERENCES locations,
+    pickline_no INTEGER,
+    CONSTRAINT picking_log_picking_line_fk FOREIGN KEY ( picklist_id,
+                                                         pickline_no )
+        REFERENCES picking_line ( picklist_id,
+                                  line_no ),
+    CONSTRAINT picking_log_picking_line_ck CHECK ( NOT ( activity = 'P'
+                                                         AND pickline_no IS NULL ) )
 );
 
-create index picking_log_picking_line_fk_ix on picking_log (picklist_id, pickline_no);
+CREATE INDEX picking_log_picking_line_fk_ix ON
+    picking_log (
+        picklist_id,
+        pickline_no
+    );
 
-create index picking_log_location_fk on picking_log (location_id);
+CREATE INDEX picking_log_location_fk ON
+    picking_log (
+        location_id
+    );
 
-/* -----------------------------------------------------
-   Create types and type bodies
-   ----------------------------------------------------- */
+-- Create types and type bodies.
 
 create or replace type id_name_type as object (
    id     integer
