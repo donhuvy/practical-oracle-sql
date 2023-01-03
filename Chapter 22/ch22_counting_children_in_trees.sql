@@ -16,9 +16,9 @@
    sqlcl formatting setup
    ----------------------------------------------------- */
 
-set pagesize 80
-set linesize 80
-set sqlformat ansiconsole
+SET pagesize 80
+SET linesize 80
+SET sqlformat ansiconsole
 
 /* -----------------------------------------------------
    Chapter 22 example code
@@ -26,7 +26,7 @@ set sqlformat ansiconsole
 
 -- Listing 22-1. A classic hierarchical query of employees
 
-select
+SELECT
    e.id
  , lpad(' ', 2*(level-1)) || e.name as name
  , e.title as title
@@ -220,7 +220,7 @@ match_recognize (
 )
 order by rn;
 
--- Listing 22-7. Filteríng matches with the pattern definition
+-- Listing 22-7. Filterï¿½ng matches with the pattern definition
 
 with hierarchy as (
    select
