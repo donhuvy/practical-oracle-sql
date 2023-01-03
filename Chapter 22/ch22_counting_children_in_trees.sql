@@ -1,59 +1,35 @@
-/* ***************************************************** **
+/* *******************************************************
    ch22_counting_children_in_trees.sql
    
    Companion script for Practical Oracle SQL, Apress 2020
    by Kim Berg Hansen, https://www.kibeha.dk
    Use at your own risk
    *****************************************************
-   
-   Chapter 22
-   Counting Children in Trees
-   
+   Chapter 22: Counting Children in Trees.   
    To be executed in schema PRACTICAL
-** ***************************************************** */
+********************************************************/
 
-/* -----------------------------------------------------
-   sqlcl formatting setup
-   ----------------------------------------------------- */
-
+-- sqlcl formatting setup.
 SET pagesize 80
 SET linesize 80
 SET sqlformat ansiconsole
 
-/* -----------------------------------------------------
-   Chapter 22 example code
-   ----------------------------------------------------- */
+-- Chapter 22 example code.
 
--- Listing 22-1. A classic hierarchical query of employees
+-- Listing 22-1. A classic hierarchical query of employees.
+SELECT e.id, lpad(' ', 2*(level-1)) || e.name as name, e.title as title, e.supervisor_id as super
+FROM employees e
+START WITH e.supervisor_id IS NULL CONNECT BY e.supervisor_id = prior e.id ORDER SIBLINGS BY e.name;
 
-SELECT
-   e.id
- , lpad(' ', 2*(level-1)) || e.name as name
- , e.title as title
- , e.supervisor_id as super
-from employees e
+-- Listing 22-2. Counting the number of subordinates.
+SELECT e.id, lpad(' ', 2*(level-1)) || e.name as name, 
+   (SELECT COUNT(*) FROM employees sub start with sub.supervisor_id = e.id connect by sub.supervisor_id = prior sub.id) as subs
+FROM employees e
 start with e.supervisor_id is null
 connect by e.supervisor_id = prior e.id
-order siblings by e.name;
+order siblings BY e.name;
 
--- Listing 22-2. Counting the number of subordinates
-
-select
-   e.id
- , lpad(' ', 2*(level-1)) || e.name as name
- , (
-      select count(*)
-      from employees sub
-      start with sub.supervisor_id = e.id
-      connect by sub.supervisor_id = prior sub.id
-   ) as subs
-from employees e
-start with e.supervisor_id is null
-connect by e.supervisor_id = prior e.id
-order siblings by e.name;
-
--- Listing 22-3. Counting subordinates with match_recognize
-
+-- Listing 22-3. Counting subordinates with match_recognize.
 with hierarchy as (
    select
       lvl, id, name, rownum as rn
@@ -66,8 +42,7 @@ with hierarchy as (
       order siblings by e.name
    )
 )
-select
-   id
+select id
  , lpad(' ', (lvl-1)*2) || name as name
  , subs
 from hierarchy
